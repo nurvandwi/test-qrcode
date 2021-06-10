@@ -10,7 +10,7 @@
       <div v-if="validationFailure" class="validation-failure">Ooops!</div>
 
       <div v-if="validationPending" class="validation-pending">
-        Long validation in progress...
+        validation in progress...
       </div>
     </qrcode-stream>
   </div>
