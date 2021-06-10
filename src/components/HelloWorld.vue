@@ -82,7 +82,7 @@ export default {
     },
     toLink() {
       if (this.result) {
-        this.$router.push(this.result);
+        window.open(this.result);
       }
     },
   },
