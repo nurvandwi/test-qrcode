@@ -61,8 +61,6 @@ export default {
 
       await this.timeout(2000);
       this.turnCameraOn();
-
-      await window.location.replace(this.result);
     },
 
     turnCameraOn() {
