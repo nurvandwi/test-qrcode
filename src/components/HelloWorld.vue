@@ -81,7 +81,7 @@ export default {
       });
     },
     toLink() {
-      this.$router.push(this.result);
+      window.location.href(this.result);
     },
   },
 };
