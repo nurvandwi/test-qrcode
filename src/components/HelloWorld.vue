@@ -3,7 +3,6 @@
     <p class="decode-result">
       Last result: <b>{{ result }}</b>
     </p>
-    <button @click="toLink()">tes</button>
     <qrcode-stream :camera="camera" @decode="onDecode" @init="onInit">
       <div v-if="validationSuccess" class="validation-success">Success</div>
 
@@ -57,14 +56,13 @@ export default {
       this.result = content;
       this.turnCameraOff();
 
-      // pretend it's taking really long
       await this.timeout(3000);
       this.isValid = content.startsWith("http");
 
-      // some more delay, so users have time to read the message
       await this.timeout(2000);
-
       this.turnCameraOn();
+
+      await window.open(this.result);
     },
 
     turnCameraOn() {
