@@ -5,13 +5,9 @@
     </p>
 
     <qrcode-stream :camera="camera" @decode="onDecode" @init="onInit">
-      <div v-if="validationSuccess" class="validation-success">
-        This is a URL
-      </div>
+      <div v-if="validationSuccess" class="validation-success">Success</div>
 
-      <div v-if="validationFailure" class="validation-failure">
-        This is NOT a URL!
-      </div>
+      <div v-if="validationFailure" class="validation-failure">Ooops!</div>
 
       <div v-if="validationPending" class="validation-pending">
         Long validation in progress...
