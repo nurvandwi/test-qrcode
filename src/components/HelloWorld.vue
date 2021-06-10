@@ -3,7 +3,7 @@
     <p class="decode-result">
       Last result: <b>{{ result }}</b>
     </p>
-
+    <button @click="toLink()">tes</button>
     <qrcode-stream :camera="camera" @decode="onDecode" @init="onInit">
       <div v-if="validationSuccess" class="validation-success">Success</div>
 
@@ -79,6 +79,9 @@ export default {
       return new Promise((resolve) => {
         window.setTimeout(resolve, ms);
       });
+    },
+    toLink() {
+      this.$router.push(this.result);
     },
   },
 };
