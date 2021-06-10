@@ -1,15 +1,22 @@
 <template>
   <div style="padding: 50px 50px 50px 50px; border: 1px solid black">
-    <p>
-      Track function:
-      <select v-model="selected">
-        <option v-for="option in options" :key="option.text" :value="option">
-          {{ option.text }}
-        </option>
-      </select>
+    <p class="decode-result">
+      Last result: <b>{{ result }}</b>
     </p>
 
-    <qrcode-stream :key="_uid" :track="selected.value" @init="logErrors" />
+    <qrcode-stream :camera="camera" @decode="onDecode" @init="onInit">
+      <div v-if="validationSuccess" class="validation-success">
+        This is a URL
+      </div>
+
+      <div v-if="validationFailure" class="validation-failure">
+        This is NOT a URL!
+      </div>
+
+      <div v-if="validationPending" class="validation-pending">
+        Long validation in progress...
+      </div>
+    </qrcode-stream>
   </div>
 </template>
 
@@ -20,83 +27,89 @@ export default {
   components: { QrcodeStream },
 
   data() {
-    const options = [
-      { text: "nothing (default)", value: undefined },
-      { text: "outline", value: this.paintOutline },
-      { text: "centered text", value: this.paintCenterText },
-      { text: "bounding box", value: this.paintBoundingBox },
-    ];
+    return {
+      isValid: undefined,
+      camera: "auto",
+      result: null,
+    };
+  },
 
-    const selected = options[1];
+  computed: {
+    validationPending() {
+      return this.isValid === undefined && this.camera === "off";
+    },
 
-    return { selected, options };
+    validationSuccess() {
+      return this.isValid === true;
+    },
+
+    validationFailure() {
+      return this.isValid === false;
+    },
   },
 
   methods: {
-    paintOutline(detectedCodes, ctx) {
-      for (const detectedCode of detectedCodes) {
-        const [firstPoint, ...otherPoints] = detectedCode.cornerPoints;
-
-        ctx.strokeStyle = "red";
-
-        ctx.beginPath();
-        ctx.moveTo(firstPoint.x, firstPoint.y);
-        for (const { x, y } of otherPoints) {
-          ctx.lineTo(x, y);
-        }
-        ctx.lineTo(firstPoint.x, firstPoint.y);
-        ctx.closePath();
-        ctx.stroke();
-      }
+    onInit(promise) {
+      promise.catch(console.error).then(this.resetValidationState);
     },
 
-    paintBoundingBox(detectedCodes, ctx) {
-      for (const detectedCode of detectedCodes) {
-        const {
-          boundingBox: { x, y, width, height },
-        } = detectedCode;
-
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = "#007bff";
-        ctx.strokeRect(x, y, width, height);
-      }
+    resetValidationState() {
+      this.isValid = undefined;
     },
 
-    paintCenterText(detectedCodes, ctx) {
-      for (const detectedCode of detectedCodes) {
-        const { boundingBox, rawValue } = detectedCode;
+    async onDecode(content) {
+      this.result = content;
+      this.turnCameraOff();
 
-        const centerX = boundingBox.x + boundingBox.width / 2;
-        const centerY = boundingBox.y + boundingBox.height / 2;
+      // pretend it's taking really long
+      await this.timeout(3000);
+      this.isValid = content.startsWith("http");
 
-        const fontSize = Math.max(
-          12,
-          (50 * boundingBox.width) / ctx.canvas.width
-        );
-        console.log(boundingBox.width, ctx.canvas.width);
+      // some more delay, so users have time to read the message
+      await this.timeout(2000);
 
-        ctx.font = `bold ${fontSize}px sans-serif`;
-        ctx.textAlign = "center";
-
-        ctx.lineWidth = 3;
-        ctx.strokeStyle = "#35495e";
-        ctx.strokeText(detectedCode.rawValue, centerX, centerY);
-
-        ctx.fillStyle = "#5cb984";
-        ctx.fillText(rawValue, centerX, centerY);
-      }
+      this.turnCameraOn();
     },
 
-    logErrors(promise) {
-      promise.catch(console.error);
+    turnCameraOn() {
+      this.camera = "auto";
+    },
+
+    turnCameraOff() {
+      this.camera = "off";
+    },
+
+    timeout(ms) {
+      return new Promise((resolve) => {
+        window.setTimeout(resolve, ms);
+      });
     },
   },
 };
 </script>
 
 <style scoped>
-.error {
+.validation-success,
+.validation-failure,
+.validation-pending {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+
+  background-color: rgba(255, 255, 255, 0.8);
+  text-align: center;
   font-weight: bold;
+  font-size: 1rem;
+  padding: 10px;
+
+  display: flex;
+  flex-flow: column nowrap;
+  justify-content: center;
+}
+.validation-success {
+  color: green;
+}
+.validation-failure {
   color: red;
 }
 </style>
